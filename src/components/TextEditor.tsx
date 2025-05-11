@@ -54,8 +54,9 @@ export default function TextEditor() {
           text,
           start: selectionStart,
           end: selectionEnd,
-          x: rect.left + rect.width / 2,
-          y: rect.bottom + window.scrollY + 10, // Position below the selection
+          // Position the button at the end of the selection
+          x: rect.right,
+          y: rect.top + window.scrollY, // Position at the same line as the selection
         });
       }
     } else {
@@ -151,11 +152,11 @@ export default function TextEditor() {
           {selectionInfo && (
             <div
               ref={popoverRef}
-              className="absolute z-10 animate-slide-in shadow-lg"
+              className="absolute z-10 animate-slide-in"
               style={{
-                left: `${selectionInfo.x}px`,
+                left: `${selectionInfo.x + 5}px`, // Add a small offset
                 top: `${selectionInfo.y}px`,
-                transform: 'translateX(-50%)',
+                transform: 'translateY(-50%)', // Center vertically
               }}
             >
               <TooltipProvider>
@@ -174,7 +175,7 @@ export default function TextEditor() {
                       )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">
+                  <TooltipContent side="right">
                     <p>Paraphrase selected text</p>
                   </TooltipContent>
                 </Tooltip>
