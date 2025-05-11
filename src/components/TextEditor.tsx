@@ -9,9 +9,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card";
+import { ArrowRight } from "lucide-react";
 
 export default function TextEditor() {
   const [content, setContent] = useState<string>("");
+  const [paraphrasedContent, setParaphrasedContent] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [selectionInfo, setSelectionInfo] = useState<{
     text: string;
@@ -86,6 +89,25 @@ export default function TextEditor() {
     }
   };
 
+  const handleFullParaphrase = async () => {
+    if (content.trim() === "") {
+      toast.error("Please enter some text to paraphrase");
+      return;
+    }
+    
+    try {
+      setIsProcessing(true);
+      const result = await paraphraseText(content);
+      setParaphrasedContent(result);
+      toast.success("Text successfully paraphrased!");
+    } catch (error) {
+      console.error("Paraphrase error:", error);
+      toast.error("Failed to paraphrase text. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   useEffect(() => {
     document.addEventListener("selectionchange", handleSelectionChange);
     
@@ -110,55 +132,94 @@ export default function TextEditor() {
   }, [handleSelectionChange]);
 
   return (
-    <div className="relative w-full">
-      <div
-        ref={editorRef}
-        contentEditable
-        onInput={handleInput}
-        className="min-h-[300px] p-6 glass-card outline-none transition-all focus:ring-1 focus:ring-primary/50 shadow-lg animate-fade-in"
-        suppressContentEditableWarning={true}
-        data-placeholder="Start typing or paste your text here..."
-      />
-      
-      {content.length === 0 && (
-        <div className="absolute top-6 left-6 text-gray-400 pointer-events-none">
-          Start typing or paste your text here...
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Original Text Editor */}
+        <div className="relative w-full">
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground">Original Text</h3>
+          <div
+            ref={editorRef}
+            contentEditable
+            onInput={handleInput}
+            className="min-h-[300px] p-6 glass-card outline-none transition-all focus:ring-1 focus:ring-primary/50 shadow-lg animate-fade-in"
+            suppressContentEditableWarning={true}
+            data-placeholder="Start typing or paste your text here..."
+          />
+          
+          {content.length === 0 && (
+            <div className="absolute top-12 left-6 text-gray-400 pointer-events-none">
+              Start typing or paste your text here...
+            </div>
+          )}
+          
+          {selectionInfo && (
+            <div
+              ref={popoverRef}
+              className="absolute z-10 animate-slide-in shadow-lg"
+              style={{
+                left: `${selectionInfo.x}px`,
+                top: `${selectionInfo.y}px`,
+                transform: 'translateX(-50%)',
+              }}
+            >
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleParaphraseClick}
+                      className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all"
+                      size="icon"
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <div className="h-5 w-5 rounded-full border-2 border-r-transparent animate-spin" />
+                      ) : (
+                        <span className="text-sm font-semibold">AI</span>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Paraphrase selected text</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
         </div>
-      )}
-      
-      {selectionInfo && (
-        <div
-          ref={popoverRef}
-          className="absolute z-10 animate-slide-in shadow-lg"
-          style={{
-            left: `${selectionInfo.x}px`,
-            top: `${selectionInfo.y}px`,
-            transform: 'translateX(-50%)',
-          }}
+
+        {/* Paraphrased Text Display */}
+        <div className="w-full">
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground">Paraphrased Result</h3>
+          <Card className="min-h-[300px] p-6 glass-card shadow-lg animate-fade-in overflow-auto">
+            {paraphrasedContent ? (
+              <p className="text-foreground">{paraphrasedContent}</p>
+            ) : (
+              <p className="text-gray-400">Paraphrased content will appear here</p>
+            )}
+          </Card>
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex justify-center mt-6">
+        <Button 
+          onClick={handleFullParaphrase} 
+          className="px-8 py-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 transition-all shadow-lg"
+          disabled={isProcessing}
         >
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={handleParaphraseClick}
-                  className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 transition-all"
-                  size="icon"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <div className="h-5 w-5 rounded-full border-2 border-r-transparent animate-spin" />
-                  ) : (
-                    <span className="text-sm font-semibold">AI</span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Paraphrase selected text</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      )}
+          {isProcessing ? (
+            <>
+              <div className="h-5 w-5 mr-2 rounded-full border-2 border-r-transparent animate-spin" />
+              Paraphrasing...
+            </>
+          ) : (
+            <>
+              Paraphrase Text
+              <ArrowRight className="ml-2" />
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
