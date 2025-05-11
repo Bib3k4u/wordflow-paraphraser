@@ -23,11 +23,6 @@ export default function TextEditor() {
     x: number;
     y: number;
   } | null>(null);
-  // Add state for selected text paraphrasing
-  const [selectedTextPair, setSelectedTextPair] = useState<{
-    original: string;
-    paraphrased: string;
-  } | null>(null);
   
   const editorRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -75,14 +70,14 @@ export default function TextEditor() {
       setIsProcessing(true);
       const paraphrasedText = await paraphraseText(selectionInfo.text);
       
-      // Instead of replacing, store the selected text and its paraphrased version
-      setSelectedTextPair({
-        original: selectionInfo.text,
-        paraphrased: paraphrasedText
-      });
+      // Clear the full content paraphrased result and set only the selected text pair
+      setParaphrasedContent("");
+      
+      // Update the paraphrasedContent to only show the selected text's paraphrase
+      setParaphrasedContent(paraphrasedText);
       
       setSelectionInfo(null);
-      toast.success("Text successfully paraphrased!");
+      toast.success("Selected text successfully paraphrased!");
     } catch (error) {
       console.error("Paraphrase error:", error);
       toast.error("Failed to paraphrase selected text.");
@@ -101,8 +96,6 @@ export default function TextEditor() {
       setIsProcessing(true);
       const result = await paraphraseText(content);
       setParaphrasedContent(result);
-      // Clear any selected text paraphrase when doing a full paraphrase
-      setSelectedTextPair(null);
       toast.success("Text successfully paraphrased!");
     } catch (error) {
       console.error("Paraphrase error:", error);
@@ -194,19 +187,7 @@ export default function TextEditor() {
         <div className="w-full">
           <h3 className="text-sm font-medium mb-2 text-muted-foreground">Paraphrased Result</h3>
           <Card className="min-h-[300px] p-6 glass-card shadow-lg animate-fade-in overflow-auto">
-            {/* Display the paraphrased version of selected text if available */}
-            {selectedTextPair ? (
-              <div className="space-y-4">
-                <div className="p-2 bg-white/5 rounded border border-white/5">
-                  <p className="text-xs text-muted-foreground mb-1">Selected Original</p>
-                  <p className="text-foreground">{selectedTextPair.original}</p>
-                </div>
-                <div className="p-2 bg-primary/10 rounded border border-primary/20">
-                  <p className="text-xs text-primary mb-1">Selected Paraphrased</p>
-                  <p className="text-foreground">{selectedTextPair.paraphrased}</p>
-                </div>
-              </div>
-            ) : paraphrasedContent ? (
+            {paraphrasedContent ? (
               <p className="text-foreground">{paraphrasedContent}</p>
             ) : (
               <p className="text-gray-400">Paraphrased content will appear here</p>
