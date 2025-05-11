@@ -116,9 +116,15 @@ export default function TextEditor() {
         contentEditable
         onInput={handleInput}
         className="min-h-[300px] p-6 glass-card outline-none transition-all focus:ring-1 focus:ring-primary/50 shadow-lg animate-fade-in"
-        placeholder="Start typing or paste your text here..."
         suppressContentEditableWarning={true}
+        data-placeholder="Start typing or paste your text here..."
       />
+      
+      {content.length === 0 && (
+        <div className="absolute top-6 left-6 text-gray-400 pointer-events-none">
+          Start typing or paste your text here...
+        </div>
+      )}
       
       {selectionInfo && (
         <div
